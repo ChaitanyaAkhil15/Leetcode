@@ -1,0 +1,84 @@
+Let me break this down step by step, because this is really the heart of understanding why the iteration directions are different. I'll walk you through exactly what's happening in memory as we process each item.
+
+**First, let's establish what our DP array represents at any given moment:**
+
+When we're processing item `i`, our `dp` array contains the optimal solutions for all possible weights, but using only items `0` through `i-1`. This is the key insight that everything else builds from.
+
+**Now, let's dive deep into the Unbounded Knapsack scenario:**
+
+Imagine we have a coin with weight 2 and value 3, and we're working with a knapsack of capacity 10. Let's say we're currently processing this coin, and our DP array initially looks like this:
+
+```
+Index:  0  1  2  3  4  5  6  7  8  9  10
+dp:    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+```
+
+When we process this coin left to right, here's exactly what happens:
+
+**Step 1: We reach dp[2]**
+- We ask: "What's the best value I can get with weight capacity 2?"
+- We compare: current dp[2] vs dp[2-2] + 3 = dp[0] + 3 = 0 + 3 = 3
+- We update: dp[2] = 3
+- Our array now: [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0]
+
+**Step 2: We reach dp[4]**
+- We ask: "What's the best value I can get with weight capacity 4?"
+- We compare: current dp[4] vs dp[4-2] + 3 = dp[2] + 3
+- Here's the crucial part: dp[2] is now 3 (we just updated it!)
+- So we're comparing: 0 vs 3 + 3 = 6
+- We update: dp[4] = 6
+- Our array now: [0, 0, 3, 0, 6, 0, 0, 0, 0, 0, 0]
+
+**Step 3: We reach dp[6]**
+- We compare: current dp[6] vs dp[6-2] + 3 = dp[4] + 3 = 6 + 3 = 9
+- We update: dp[6] = 9
+- Our array now: [0, 0, 3, 0, 6, 0, 9, 0, 0, 0, 0]
+
+Do you see what's happening? When we calculated dp[4], we used the already-updated value of dp[2], which represents a solution that already includes one coin. This effectively means we're using the coin twice: once in the dp[2] solution and once more by adding another coin to get to dp[4].
+
+This is exactly what we want in unbounded knapsack! We want to be able to use items multiple times. The left-to-right iteration creates this "cascading effect" where each position can build upon solutions that already include the current item.
+
+**Now let's contrast this with Bounded Knapsack:**
+
+In bounded knapsack, each item can only be used once. Let's say we have an item with weight 2 and value 3, and we start with the same array:
+
+```
+Index:  0  1  2  3  4  5  6  7  8  9  10
+dp:    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+```
+
+**If we mistakenly went left to right (the wrong way):**
+
+**Step 1: We reach dp[2]**
+- We compare: 0 vs dp[0] + 3 = 3
+- We update: dp[2] = 3
+- Array: [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0]
+
+**Step 2: We reach dp[4]**
+- We compare: 0 vs dp[2] + 3 = 3 + 3 = 6
+- We update: dp[4] = 6
+- Array: [0, 0, 3, 0, 6, 0, 0, 0, 0, 0, 0]
+
+But wait! This is wrong for bounded knapsack. We've effectively used the same item twice: once to create the value 3 at dp[2], and then again to add another 3 and get 6 at dp[4]. This violates the constraint that each item can only be used once.
+
+**The correct way for bounded knapsack (right to left):**
+
+**Step 1: We reach dp[4]**
+- We compare: 0 vs dp[4-2] + 3 = dp[2] + 3 = 0 + 3 = 3
+- We update: dp[4] = 3
+- Array: [0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0]
+
+**Step 2: We reach dp[2]**
+- We compare: 0 vs dp[2-2] + 3 = dp[0] + 3 = 0 + 3 = 3
+- We update: dp[2] = 3
+- Array: [0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0]
+
+Notice the key difference: when we calculated dp[4], we used the original, unmodified value of dp[2] (which was 0). This dp[2] = 0 represents the optimal solution for weight 2 without using the current item at all. So when we add the current item to get dp[4] = 3, we're using the item exactly once.
+
+**The mental model to carry forward:**
+
+Think of the DP array as containing "snapshots" of optimal solutions. In unbounded knapsack, you want to use updated snapshots that already include the current item, because you're allowed to use it multiple times. In bounded knapsack, you need to use the original snapshots that don't include the current item, because you can only use each item once.
+
+The iteration direction controls which "version" of these snapshots you're accessing: the fresh, updated ones (left to right) or the original, unmodified ones (right to left).
+
+Does this help clarify why the same recurrence relation behaves so differently depending on the iteration direction?
