@@ -93,3 +93,30 @@ int lengthOfLIS(vector<int>& nums) {
 
     return mx;
 } 
+
+// Most Optimal Solution
+int lengthOfLIS(vector<int>& nums) {
+    int n = nums.size();
+
+    vector<int> tails;
+    for(int i = 0; i < n; i++) {
+        int num = nums[i];
+        
+        int left = 0, right = tails.size();
+        while(left < right) {
+            int mid = left + (right - left) / 2;
+
+            if(tails[mid] < num)
+                left = mid + 1;
+            else
+                right = mid;
+        }
+
+        if(left == tails.size())
+            tails.push_back(num);
+        else
+            tails[left] = num;
+    }
+
+    return tails.size();
+}
